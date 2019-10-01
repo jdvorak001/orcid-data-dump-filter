@@ -10,7 +10,8 @@ import sys
 import xml.etree.ElementTree as ET
 
 dump_file = "sample-data/ORCID-public-profiles-2018-API-2.0_xml-sample.tar.gz"
-num_worker_threads = 10
+num_worker_threads = 3
+queue_length = 200
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy( asyncio.WindowsProactorEventLoopPolicy() )
@@ -40,7 +41,7 @@ ns = {
     "work": "http://www.orcid.org/ns/work"
 }
 
-q = queue.Queue( maxsize=20 )
+q = queue.Queue( maxsize=queue_length )
 
 def worker():
     while True:
