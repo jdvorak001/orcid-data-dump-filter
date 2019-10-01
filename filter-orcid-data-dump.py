@@ -7,7 +7,7 @@ import subprocess
 import asyncio
 import os
 import sys
-import xml.etree.ElementTree as ET
+from lxml import etree
 
 dump_file = "sample-data/ORCID-public-profiles-2018-API-2.0_xml-sample.tar.gz"
 num_worker_threads = 3
@@ -47,7 +47,7 @@ def worker():
     while True:
         filename = q.get()
         if filename is None: break
-        tree = ET.parse( filename )
+        tree = etree.parse( filename )
         root = tree.getroot()
         x1 = root.findall( 'person:person/address:addresses/address:address/address:country[ . = "CZ" ]', ns )
         x2 = root.findall( 'activities:activities-summary/activities:educations/education:education-summary/education:organization/common:address/common:country[ . = "CZ" ]', ns )
