@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 import threading
 import queue
 import subprocess
@@ -56,13 +57,17 @@ def worker():
             os.remove( filename )
         q.task_done()
 
+re1 = re.compile( "^x\\s+" )
+
 async def process( dump_file ):
     # Create the "tar xzvf ${file}" subprocess; redirect the standard output into a pipe
-    untar_proc = await asyncio.create_subprocess_exec( "tar", "xzvf", dump_file, stderr=asyncio.subprocess.PIPE )
+    untar_proc = await asyncio.create_subprocess_exec( "tar", "xzvf", dump_file, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE )
+    untar_list_stream = untar_proc.stderr if sys.platform == "darwin" else untar_proc.stdout
     while True:
-        data = await untar_proc.stderr.readline()
+        data = await untar_list_stream.readline()
         if not data: break
-        ( operation, filename ) = data.decode( "ascii" ).rstrip().split()
+        filename = data.decode( "ascii" ).rstrip()
+        filename = re1.sub( "", filename )  # for compatibility with macOS tar
         if filename[-1] != "/":
             q.put( filename )
     
