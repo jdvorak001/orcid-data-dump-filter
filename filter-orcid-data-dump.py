@@ -17,30 +17,9 @@ queue_length = 200
 if sys.platform == "win32":
     asyncio.set_event_loop_policy( asyncio.WindowsProactorEventLoopPolicy() )
 
-ns = {
-    "activities": "http://www.orcid.org/ns/activities",
-    "address": "http://www.orcid.org/ns/address",
-    "bulk": "http://www.orcid.org/ns/bulk",
-    "common": "http://www.orcid.org/ns/common",
-    "deprecated": "http://www.orcid.org/ns/deprecated",
-    "education": "http://www.orcid.org/ns/education",
-    "email": "http://www.orcid.org/ns/email",
-    "employment": "http://www.orcid.org/ns/employment",
-    "error": "http://www.orcid.org/ns/error",
-    "external-identifier": "http://www.orcid.org/ns/external-identifier",
-    "funding": "http://www.orcid.org/ns/funding",
-    "history": "http://www.orcid.org/ns/history",
-    "internal": "http://www.orcid.org/ns/internal",
-    "keyword": "http://www.orcid.org/ns/keyword",
-    "other-name": "http://www.orcid.org/ns/other-name",
-    "peer-review": "http://www.orcid.org/ns/peer-review",
-    "person": "http://www.orcid.org/ns/person",
-    "personal-details": "http://www.orcid.org/ns/personal-details",
-    "preferences": "http://www.orcid.org/ns/preferences",
-    "record": "http://www.orcid.org/ns/record",
-    "researcher-url": "http://www.orcid.org/ns/researcher-url",
-    "work": "http://www.orcid.org/ns/work"
-}
+# expects a match() function to be defined: 
+#   given a xml root element, it returns True when the profile matches your condition
+import my_orcid_filter
 
 q = queue.Queue( maxsize=queue_length )
 closing = False
@@ -51,11 +30,9 @@ def worker():
             filename = q.get()
             if filename is None: break
             tree = etree.parse( filename )
-            root = tree.getroot()
-            x1 = root.findall( 'person:person/address:addresses/address:address/address:country[ . = "CZ" ]', ns )
-            x2 = root.findall( 'activities:activities-summary/activities:educations/education:education-summary/education:organization/common:address/common:country[ . = "CZ" ]', ns )
-            x3 = root.findall( 'activities:activities-summary/activities:employments/employment:employment-summary/employment:organization/common:address/common:country[ . = "CZ" ]', ns )
-            if x1 or x2 or x3:
+            xml_root = tree.getroot()
+            m = my_orcid_filter.match( xml_root )
+            if m:
                 print( filename )
             else:
                 os.remove( filename )
