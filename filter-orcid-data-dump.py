@@ -8,6 +8,7 @@ import asyncio
 import os
 import sys
 from lxml import etree
+import time
 
 dump_file = "sample-data/ORCID-public-profiles-2018-API-2.0_xml-sample.tar.gz"
 num_worker_threads = 3
@@ -42,21 +43,25 @@ ns = {
 }
 
 q = queue.Queue( maxsize=queue_length )
+closing = False
 
 def worker():
     while True:
-        filename = q.get()
-        if filename is None: break
-        tree = etree.parse( filename )
-        root = tree.getroot()
-        x1 = root.findall( 'person:person/address:addresses/address:address/address:country[ . = "CZ" ]', ns )
-        x2 = root.findall( 'activities:activities-summary/activities:educations/education:education-summary/education:organization/common:address/common:country[ . = "CZ" ]', ns )
-        x3 = root.findall( 'activities:activities-summary/activities:employments/employment:employment-summary/employment:organization/common:address/common:country[ . = "CZ" ]', ns )
-        if x1 or x2 or x3:
-            print( filename )
+        if closing or q.qsize() > num_worker_threads:
+            filename = q.get()
+            if filename is None: break
+            tree = etree.parse( filename )
+            root = tree.getroot()
+            x1 = root.findall( 'person:person/address:addresses/address:address/address:country[ . = "CZ" ]', ns )
+            x2 = root.findall( 'activities:activities-summary/activities:educations/education:education-summary/education:organization/common:address/common:country[ . = "CZ" ]', ns )
+            x3 = root.findall( 'activities:activities-summary/activities:employments/employment:employment-summary/employment:organization/common:address/common:country[ . = "CZ" ]', ns )
+            if x1 or x2 or x3:
+                print( filename )
+            else:
+                os.remove( filename )
+            q.task_done()
         else:
-            os.remove( filename )
-        q.task_done()
+            time.sleep( 0.01 )
 
 re1 = re.compile( "^x\\s+" )
 
@@ -84,6 +89,7 @@ for i in range( num_worker_threads ):
 asyncio.run( process( dump_file ) )
 
 # block until all tasks are done
+closing = True
 q.join()
 
 # stop workers
