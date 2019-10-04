@@ -1,2 +1,3 @@
-summaries/
+/summaries/
 /__pycache__/
+/data/include/ORCIDs.txt
