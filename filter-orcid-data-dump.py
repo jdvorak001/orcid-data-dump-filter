@@ -10,7 +10,8 @@ import sys
 from lxml import etree
 import time
 
-dump_file = "sample-data/ORCID-public-profiles-2018-API-2.0_xml-sample.tar.gz"
+#dump_file = "/data/ORCID/ORCID-public-profiles-2018-API-2.0_xml.tar.gz"
+dump_file = "data/sample/ORCID-public-profiles-2018-API-2.0_xml-sample.tar.gz"
 num_worker_threads = 3
 queue_length = 200
 
