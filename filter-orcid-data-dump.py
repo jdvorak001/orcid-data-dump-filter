@@ -26,13 +26,14 @@ q = queue.Queue( maxsize=queue_length )
 closing = False
 
 def worker():
+    c = my_orcid_filter.OrcidCondition()
     while True:
         if closing or q.qsize() > num_worker_threads:
             filename = q.get()
             if filename is None: break
             tree = etree.parse( filename )
             xml_root = tree.getroot()
-            m = my_orcid_filter.match( xml_root )
+            m = c.match( xml_root )
             if m:
                 print( filename )
             else:

@@ -35,11 +35,15 @@ if os.path.isfile( incl_filename ):
         for line in f:
             orcids.add( line.strip() )
 
-def match( xml_root ):
-    "given a xml root element, it returns True when the profile matches your condition"
-    orcid_id = xml_root.xpath( 'string( common:orcid-identifier/common:path )', namespaces=ns )
-    if orcid_id in orcids: return True
-    x1 = xml_root.findall( 'person:person/address:addresses/address:address/address:country[ . = "%s" ]' % my_country, ns )
-    x2 = xml_root.findall( 'activities:activities-summary/activities:educations/education:education-summary/education:organization/common:address/common:country[ . = "%s" ]' % my_country, ns )
-    x3 = xml_root.findall( 'activities:activities-summary/activities:employments/employment:employment-summary/employment:organization/common:address/common:country[ . = "%s" ]' % my_country, ns )
-    return x1 or x2 or x3
+class OrcidCondition:
+
+    def match( self, xml_root ):
+        "given a xml root element, it returns True when the profile matches your condition"
+        orcid_id = xml_root.xpath( 'string( common:orcid-identifier/common:path )', namespaces=ns )
+        x1 = xml_root.findall( 'person:person/address:addresses/address:address/address:country[ . = "%s" ]' % my_country, ns )
+        x2 = xml_root.findall( 'activities:activities-summary/activities:educations/education:education-summary/education:organization/common:address/common:country[ . = "%s" ]' % my_country, ns )
+        x3 = xml_root.findall( 'activities:activities-summary/activities:employments/employment:employment-summary/employment:organization/common:address/common:country[ . = "%s" ]' % my_country, ns )
+        if ( orcid_id in orcids ) or x1 or x2 or x3:
+            return True
+        return False
+
